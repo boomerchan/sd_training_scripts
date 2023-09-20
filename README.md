@@ -28,7 +28,7 @@ Output: newfilename-1.png, newfilename-2.jpg, newfilename-3.png, etc.
 
 ## resize_bulk.py
 
-Simple script to crop and resize all images in a folder to an SDXL training value. Usage:
+Simple script to crop and resize all images in a folder to an SDXL training value. **The original images are not modified.** New cropped and resized images are placed inside of a folder named `/resized`. Usage:
 ```
 python resize_bulk.py /path/to/dir
 ```
