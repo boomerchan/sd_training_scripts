@@ -1,21 +1,17 @@
 # sd_training_scripts
- Miscellaneous python scripts for managing SD training datasets.
-
+Miscellaneous python scripts for managing SD training datasets.
 ## rename_bulk.py
-
 **Recommended to complete this step before generating txt files for captions.** Renames all files within a specified directory and sequentially appends a number to each file, regardless of the file extension (jpg, png, etc). Usage:
 ```
 python rename_bulk.py /path/to/dir newfilename
 ```
 Output: newfilename-1.png, newfilename-2.jpg, newfilename-3.png, etc.
-
 ## resize_bulk.py
-
-Simple script to crop and resize all images in a folder to the closest SDXL training resolution based on its resolution. **The original images are not modified.** New cropped and resized images are placed inside of a folder named `/resized`. Default usage:
+Simple script to crop and resize all images in a folder to the closest SDXL training resolution based on its aspect ratio. **The original images are not modified.** New cropped and resized images are placed inside of a folder named `/resized`. Default usage:
 ```
 python resize_bulk.py /path/to/dir [--width pixels] [--height pixels] [--random] [--png] [--shortside pixels] [--longside pixels]
 ```
-By default, selects the resolution closest to the original image aspect ratio and outputs as jpg. Use commandline flag `--random` to randomize the aspect ratio. Use commandline flag `--png` to save as png (this is slower and uses more space). Example:
+By default, selects an SDXL training resolution closest to the original image aspect ratio and outputs as jpg. Use commandline flag `--random` to randomize the aspect ratio. Use commandline flag `--png` to save as png (this is slower and uses more space). Two SDXL aspect ratios are disabled by default, remove the hashes in the .py file to use them. Example:
 ```
 python resize_bulk.py /path/to/dir --random --png
 ```
@@ -30,7 +26,6 @@ python resize_bulk.py /path/to/dir --width 512
 ```
 ### --short-side and --long-side
 `--short-side` specifies the pixels for the shortest side, ensuring a minimum width/height. `--long-side` specifies the pixels for the longest side, ensuring a maximum width/height.
-
 For example, let's resize 2 images. `1167x1500` and `1200x960`:
 ```
 python resize_bulk.py /path/to/dir --short-side 768
@@ -56,5 +51,10 @@ Use the commandline flag `--appened` to add the tag to the end of the txt file. 
 python prepend_tag.py /path/to/100_samdoesart samdoesart --append
 ```
 ", samdoesart" would be appended to every txt file in the directory.
-
+## dependencies
+You may need to installow `Pillow`:
+```
+python3 -m pip install --upgrade pip
+python3 -m pip install --upgrade Pillow
+```
 All scripts were written with the help of ChatGPT.
