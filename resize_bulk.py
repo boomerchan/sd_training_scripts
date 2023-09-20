@@ -8,7 +8,7 @@ import sys
 # Simple script to crop and resize all images in a folder to an SDXL training value
 # Usage: python resize_bulk.py /path/to/dir
 
-# By default, selects the resolution closest to the original image aspect ration
+# By default, selects the resolution closest to the original image aspect ratio
 # --random to randomize the aspect ratio
 # --png to save as png, slower and uses more space
 # Example: python resize_bulk.py /path/to/dir --random --png
