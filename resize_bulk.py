@@ -21,17 +21,27 @@ start_time = time.time()
 
 # Define target resolutions
 target_resolutions = [
-    {"name": "1024x1024", "width": 1024, "height": 1024},
-    {"name": "1152x896", "width": 1152, "height": 896},
-    {"name": "896x1152", "width": 896, "height": 1152},
-    {"name": "1216x832", "width": 1216, "height": 832},
-    {"name": "832x1216", "width": 832, "height": 1216},
+    {"name": "1408x704", "width": 1408, "height": 704},
     {"name": "1344x768", "width": 1344, "height": 768},
+    {"name": "1280x768", "width": 1280, "height": 768},
+    {"name": "1216x832", "width": 1216, "height": 832},
+    {"name": "1152x896", "width": 1152, "height": 896},
+    {"name": "1152x832", "width": 1152, "height": 832},
+    {"name": "1088x960", "width": 1088, "height": 960},
+    {"name": "1088x896", "width": 1088, "height": 896},
+    {"name": "1024x1024", "width": 1024, "height": 1024},
+    {"name": "1024x960", "width": 1024, "height": 960},
+    {"name": "960x1088", "width": 960, "height": 1088},
+    {"name": "960x1024", "width": 960, "height": 1024},
+    {"name": "896x1152", "width": 896, "height": 1152},
+    {"name": "896x1088", "width": 896, "height": 1088},
+    {"name": "832x1216", "width": 832, "height": 1216},
+    {"name": "832x1152", "width": 832, "height": 1152},
     {"name": "768x1344", "width": 768, "height": 1344},
-# I hashed these resolutions because they tend to break most images
-# Remove the hashes if you would like to use them
-#    {"name": "1536x640", "width": 1536, "height": 640},
-#    {"name": "640x1536", "width": 640, "height": 1536},
+    {"name": "768x1280", "width": 768, "height": 1280},
+    {"name": "704x1408", "width": 704, "height": 1408},
+    {"name": "704x1344", "width": 704, "height": 1344},
+# SDXL training resolutions with aspect ratios >2:1 and <1:2 have been excluded from this list
 ]
 
 def closest_aspect_ratio(width, height):
