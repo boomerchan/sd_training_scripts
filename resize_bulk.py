@@ -6,29 +6,32 @@ import time
 import sys
 
 # Simple script to crop and resize all images in a folder to an SDXL training value
-# Usage: python resize_bulk.py /path/to/dir
+# Usage: python resize_bulk.py /path/to/dir [--height pixels] [--width pixels] [--random] [--png] [--shortside pixels] [--longside pixels]
 
-# By default, selects the resolution closest to the original image aspect ratio
+# By default, selects the resolution closest to the original image aspect ration
 # --random to randomize the aspect ratio
 # --png to save as png, slower and uses more space
-# Example: python resize_bulk.py /path/to/dir --random --png
+# --height and --width specify the pixels respectively
+# if only one --height or --width is used, the image will be scaled to its original aspect ratio
+# --short-side specifies the pixels for the shortest side, ensuring a minimum width/height
+# --long-side specifies the pixels for the longest side, ensuring a maximum width/height
 
 # Record the start time
 start_time = time.time()
 
 # Define target resolutions
 target_resolutions = [
-    {"name": "1024x1024 (1:1)", "width": 1024, "height": 1024},
-    {"name": "1152x896 (1.28:1)", "width": 1152, "height": 896},
-    {"name": "896x1152 (0.78:1)", "width": 896, "height": 1152},
-    {"name": "1216x832 (1.46:1)", "width": 1216, "height": 832},
-    {"name": "832x1216 (0.68:1)", "width": 832, "height": 1216},
-    {"name": "1344x768 (1.75:1)", "width": 1344, "height": 768},
-    {"name": "768x1344 (0.57:1)", "width": 768, "height": 1344},
+    {"name": "1024x1024", "width": 1024, "height": 1024},
+    {"name": "1152x896", "width": 1152, "height": 896},
+    {"name": "896x1152", "width": 896, "height": 1152},
+    {"name": "1216x832", "width": 1216, "height": 832},
+    {"name": "832x1216", "width": 832, "height": 1216},
+    {"name": "1344x768", "width": 1344, "height": 768},
+    {"name": "768x1344", "width": 768, "height": 1344},
 # I hashed these resolutions because they tend to break most images
-# Simply remove the hashes if you would like to use them
-#    {"name": "1536x640 (2.4:1)", "width": 1536, "height": 640},
-#    {"name": "640x1536 (1:2.4)", "width": 640, "height": 1536},
+# Remove the hashes if you would like to use them
+#    {"name": "1536x640", "width": 1536, "height": 640},
+#    {"name": "640x1536", "width": 640, "height": 1536},
 ]
 
 def closest_aspect_ratio(width, height):
@@ -39,42 +42,73 @@ def closest_aspect_ratio(width, height):
 def random_target_resolution():
     return random.choice(target_resolutions)
 
-def process_image(image_path, random_mode=False, png_mode=False):
+def process_image(image_path, height=None, width=None, short_side=None, long_side=None, random_mode=False, png_mode=False):
     img = Image.open(image_path)
-    width, height = img.size
-    source_aspect_ratio = width / height
-    
+    original_width, original_height = img.size
+    source_aspect_ratio = original_width / original_height
+
     if source_aspect_ratio.is_integer():
         source_aspect_ratio = int(source_aspect_ratio)
     else:
         source_aspect_ratio = round(source_aspect_ratio, 2)
 
-    if random_mode:
-        target = random_target_resolution()  # Pick a random target resolution
+    if long_side is not None:
+        # Resize the longest side to the specified pixel count
+        if original_width >= original_height:
+            new_width = long_side
+            new_height = int(long_side / source_aspect_ratio)
+        else:
+            new_height = long_side
+            new_width = int(long_side * source_aspect_ratio)
+    elif short_side is not None:
+        # Resize the shortest side to the specified pixel count
+        if original_width <= original_height:
+            new_width = short_side
+            new_height = int(short_side / source_aspect_ratio)
+        else:
+            new_height = short_side
+            new_width = int(short_side * source_aspect_ratio)
     else:
-        target = closest_aspect_ratio(width, height)  # Find the nearest target resolution
+        if height is not None and width is not None:
+            # If both height and width are specified, crop and resize to the given dimensions
+            new_width = width
+            new_height = height
+        elif height is not None:
+            # If only height is specified, resize the image to the specified height
+            new_height = height
+            new_width = int(new_height * source_aspect_ratio)
+        elif width is not None:
+            # If only width is specified, resize the image to the specified width
+            new_width = width
+            new_height = int(new_width / source_aspect_ratio)
+        else:
+            # If neither height nor width is specified, use the closest aspect ratio resolution
+            if random_mode:
+                target = random_target_resolution()  # Pick a random target resolution
+            else:
+                target = closest_aspect_ratio(original_width, original_height)  # Find the nearest target resolution
 
-    print(f"{os.path.basename(image_path)} converted to {target['name']}.")
+            new_width = target['width']
+            new_height = target['height']
 
-    # Define subfolder name based on target resolution
-    subfolder_name = f"{target['width']}_{target['height']}"
+    print(f"{os.path.basename(image_path)} resized to {new_width}x{new_height}.")
 
     # Crop to target aspect ratio
-    target_aspect_ratio = target['width'] / target['height']
+    target_aspect_ratio = new_width / new_height
     if source_aspect_ratio > target_aspect_ratio:
-        new_width = int(height * target_aspect_ratio)
-        new_height = height
+        crop_width = int(original_height * target_aspect_ratio)
+        crop_height = original_height
     else:
-        new_width = width
-        new_height = int(width / target_aspect_ratio)
-    
-    left_margin = (width - new_width) / 2
-    top_margin = (height - new_height) / 2
+        crop_width = original_width
+        crop_height = int(original_width / target_aspect_ratio)
 
-    img = img.crop((left_margin, top_margin, left_margin + new_width, top_margin + new_height))
+    left_margin = (original_width - crop_width) / 2
+    top_margin = (original_height - crop_height) / 2
+
+    img = img.crop((left_margin, top_margin, left_margin + crop_width, top_margin + crop_height))
 
     # Resize to target dimensions
-    img = img.resize((target['width'], target['height']), Image.LANCZOS)
+    img = img.resize((new_width, new_height), Image.LANCZOS)
 
     if png_mode:
         # Convert the image to RGBA mode for lossless PNG
@@ -97,13 +131,13 @@ def process_image(image_path, random_mode=False, png_mode=False):
     else:
         img.save(output_path, extension.upper())
 
-def main(directory_path, random_mode=False, png_mode=False):
+def main(directory_path, random_mode=False, png_mode=False, height=None, width=None, short_side=None, long_side=None):
     files_resized = 0  # Initialize the counter for resized files
     
     for filename in os.listdir(directory_path):
         if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')):
             full_path = os.path.join(directory_path, filename)
-            process_image(full_path, random_mode, png_mode)
+            process_image(full_path, height, width, short_side, long_side, random_mode, png_mode)
             files_resized += 1  # Increment the counter for each resized file
     
     # Define the output directory path
@@ -114,6 +148,10 @@ def main(directory_path, random_mode=False, png_mode=False):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Resize images in a directory.')
     parser.add_argument('directory_path', type=str, help='Path to the directory containing images')
+    parser.add_argument('--height', type=int, help='Specify the height for resizing the images')
+    parser.add_argument('--width', type=int, help='Specify the width for resizing the images')
+    parser.add_argument('--short-side', type=int, help='Specify the pixel count for resizing the shortest side')
+    parser.add_argument('--long-side', type=int, help='Specify the pixel count for resizing the longest side')
     parser.add_argument('--random', action='store_true', help='Resize images to a random aspect ratio')
     parser.add_argument('--png', action='store_true', help='Save images in lossless RGBA PNG format')
     
@@ -123,7 +161,7 @@ if __name__ == "__main__":
     start_time = time.time()
 
     # Call the main function with the input directory and optional flags
-    files_resized, output_directory = main(args.directory_path, args.random, args.png)
+    files_resized, output_directory = main(args.directory_path, args.random, args.png, args.height, args.width, args.short_side, args.long_side)
 
     # Record the end time
     end_time = time.time()
